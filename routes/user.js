@@ -62,6 +62,7 @@ router.post("/register", async (req, res) => {
     });
 
     sendConfirmationEmail(user.first_name, user.email, user.confirmationCode);
+    console.log("rejestruje");
 
     res.status(201).json(user);
   } catch (err) {
@@ -82,18 +83,18 @@ router.post("/login", async (req, res) => {
       res.status(400).send("All input is required");
     }
     const user = await User.findOne({ login });
-
+    console.log(user);
     if (user && (await bcrypt.compare(password, user.password))) {
       const token = jwt.sign(
-        { user_id: user._id, login }, //to pozniej w verify mozna wykorzystac!!
+        { _id: user._id, login }, //to pozniej w verify mozna wykorzystac!!
         process.env.TOKEN_KEY,
         {
           expiresIn: 600,
         }
       );
-
-      res.cookie("token", token, { maxAge: 600000, httpOnly: true });
-
+      console.log(user);
+      res.cookie("token", token, { maxAge: 10 * 60 * 1000, httpOnly: true });
+      console.log("token pocz" + token + "token koniec");
       if (user.status != "Active") {
         return res.status(401).send({
           //unauthorized
@@ -111,9 +112,16 @@ router.post("/login", async (req, res) => {
 
 router.get("/getUser/:id", verifyToken, async (req, res) => {
   try {
+    console.log(req.params.id + "paramy");
     const { id } = req.params;
-    const user = await User.findOne({ id });
+    // const id = req.user._id;
+    const user = await User.findOne({ _id: id });
+    console.log(id);
+    console.log(user);
     res.status(200).json(user);
+    // const { id } = req.body;
+    // const user = await User.findOne({ id });
+    // res.status(200).json(user);
   } catch (err) {
     console.log(err);
   }

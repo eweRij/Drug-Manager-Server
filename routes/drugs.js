@@ -8,7 +8,7 @@ router.post("/addDrug/:id", verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { drug } = req.body;
-    const user = await User.findOne({ id });
+    const user = await User.findOne({ _id: id });
     user.drugs = [...user.drugs, drug];
     await user.save();
     res.status(200).json(drug);

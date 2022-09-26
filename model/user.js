@@ -25,6 +25,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     unique: true,
   },
+  isLogged: { type: Boolean, default: false },
 });
 
 export default mongoose.model("users", userSchema);

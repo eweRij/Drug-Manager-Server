@@ -12,7 +12,7 @@ const verifyToken = (req, res, next) => {
     const decoded = jwt.verify(token, config.TOKEN_KEY);
 
     req.user = decoded;
-
+    console.log(req.user._id + "id z middleware");
     return next();
   } catch {
     return res.status(401).send("Invalid Token");
