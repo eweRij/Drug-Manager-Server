@@ -41,7 +41,7 @@ router.post("/register", async (req, res) => {
     const oldUser = await User.findOne({ email }); //szuka czy juz dany user istnieje
 
     if (oldUser) {
-      return res.status(409).send("User Already Exist. Please Login"); //conflict
+      return res.status(409).send("User Already Exist"); //conflict
     }
 
     const encryptedPassword = await bcrypt.hash(password, 10); //trzeba zaszyfrowac podane przez uzytkownika hasło!!
@@ -62,7 +62,6 @@ router.post("/register", async (req, res) => {
     });
 
     sendConfirmationEmail(user.first_name, user.email, user.confirmationCode);
-    console.log("rejestruje");
 
     res.status(201).json(user);
   } catch (err) {
@@ -83,7 +82,6 @@ router.post("/login", async (req, res) => {
       res.status(400).send("All input is required");
     }
     const user = await User.findOne({ login });
-    console.log(user);
     if (user && (await bcrypt.compare(password, user.password))) {
       const token = jwt.sign(
         { _id: user._id, login }, //to pozniej w verify mozna wykorzystac!!
@@ -92,17 +90,16 @@ router.post("/login", async (req, res) => {
           expiresIn: 600,
         }
       );
-      console.log(user);
       res.cookie("token", token, { maxAge: 10 * 60 * 1000, httpOnly: true });
-      console.log("token pocz" + token + "token koniec");
       if (user.status != "Active") {
         return res.status(401).send({
           //unauthorized
-          message: "Pending Account. Please Verify Your Email!",
+          message: "Pending Account",
         });
       }
       res.status(200).json(user);
     } else {
+      console.log(res.req.path);
       res.status(409).send("Invalid Credentials");
     }
   } catch (err) {
@@ -112,16 +109,9 @@ router.post("/login", async (req, res) => {
 
 router.get("/getUser/:id", verifyToken, async (req, res) => {
   try {
-    console.log(req.params.id + "paramy");
     const { id } = req.params;
-    // const id = req.user._id;
     const user = await User.findOne({ _id: id });
-    console.log(id);
-    console.log(user);
     res.status(200).json(user);
-    // const { id } = req.body;
-    // const user = await User.findOne({ id });
-    // res.status(200).json(user);
   } catch (err) {
     console.log(err);
   }
@@ -145,9 +135,10 @@ router.patch("/:id/avatar", verifyToken, uploadFile, async (req, res) => {
     newUser.save();
     res.send(avatarUrl);
   } catch (err) {
+    console.log(err);
     if (err.code == "LIMIT_FILE_SIZE") {
       return res.status(401).send({
-        message: "File size cannot be larger than 2MB!",
+        message: "File size to large",
       });
     }
     res.status(500).send({

@@ -4,15 +4,12 @@ const config = process.env;
 //middleware for token verify
 const verifyToken = (req, res, next) => {
   const token = req.cookies.token;
-  console.log(token);
   if (!token) {
     return res.status(403).send("A token is required for authentication");
   }
   try {
     const decoded = jwt.verify(token, config.TOKEN_KEY);
-
     req.user = decoded;
-    console.log(req.user._id + "id z middleware");
     return next();
   } catch {
     return res.status(401).send("Invalid Token");
